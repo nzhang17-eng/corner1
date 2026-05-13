@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Shape Selection System</title>
+
+<style>
+
+/* ========= FONT ========= */
+@font-face {
+  font-family: "ABCStefan";
+  src: url("./fonts/ABCStefan-Simple-Trial.otf") format("opentype");
+  font-display: swap;
+}
+
+/* ========= GLOBAL ========= */
+body {
+  font-family: Arial;
+  text-align: center;
+  background: #EEEEEE;
+  margin: 0;
+}
+
+/* ========= LOADING PAGE ========= */
+#loadingPage{
+  position: fixed;
+  inset: 0;
+  background: #EEEEEE;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.8s ease;
+  cursor: pointer;
+}
+
+.loading-content{
+  text-align: center;
+}
+
+.loading-logo{
+  width: 90px;
+  height: auto;
+  margin-bottom: 25px;
+  object-fit: contain;
+  animation: floatLogo 2s ease-in-out infinite;
+}
+
+@keyframes floatLogo{
+  0%{ transform: translateY(0px); }
+  50%{ transform: translateY(-6px); }
+  100%{ transform: translateY(0px); }
+}
+
+.loading-title{
+  font-family: "ABCStefan", Arial, sans-serif;
+  font-size: 42px;
+  margin-bottom: 30px;
+  letter-spacing: 2px;
+}
+
+.loading-bar-wrap{
+  width: 220px;
+  height: 2px;
+  background: #bbb;
+  overflow: hidden;
+  margin: 0 auto 15px;
+}
+
+.loading-bar{
+  width: 0%;
+  height: 100%;
+  background: #000;
+  animation: loadingAnim 2s ease forwards infinite;
+}
+
+@keyframes loadingAnim{
+  from{ width: 0%; }
+  to{ width: 100%; }
+}
+
+.loading-text{
+  font-family: "ABCStefan", Arial, sans-serif;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+/* ========= TITLE ========= */
+.title {
+  font-family: "ABCStefan", Arial, sans-serif;
+  font-size: 40px;
+  font-weight: normal;
+  letter-spacing: 1px;
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+/* ========= UPLOAD ========= */
+.upload-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+input[type="file"] {
+  font-family: "ABCStefan", Arial, sans-serif;
+  padding: 10px 14px;
+  border: 1px solid #000;
+  background: #fff;
+  cursor: pointer;
+}
+
+/* ✳️ 新增：关闭按钮 */
+#clearBtn{
+  font-family: "ABCStefan", Arial, sans-serif;
+  border: 1px solid #000;
+  background: #fff;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+#location {
+  font-family: "ABCStefan", Arial, sans-serif;
+  font-size: 15px;
+  margin: 10px 0;
+  color: #333;
+}
+
+button {
+  font-family: "ABCStefan", Arial, sans-serif;
+  padding: 10px 14px;
+  margin: 5px;
+  border: none;
+  background: #ddd;
+  cursor: pointer;
+}
+
+button.active {
+  background: #000;
+  color: #fff;
+}
+
+canvas {
+  border: 1px solid #323232;
+  margin-top: 20px;
+  cursor: crosshair;
+  max-width: 90%;
+}
+
+.toolbar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.controls {
+  margin-top: 10px;
+}
+
+.geo, .bg-label {
+  font-family: "ABCStefan", Arial, sans-serif;
+  font-size: 14px;
+  margin: 8px;
+  display: inline-block;
+}
+
+.top {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ========= STORY PAGE ========= */
+#storyPage{
+  display:none;
+  padding: 40px;
+}
+
+#storyTitle{
+  font-family: "ABCStefan", Arial, sans-serif;
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+#storyImg{
+  max-width: 80%;
+  border: 1px solid #333;
+  margin-bottom: 20px;
+}
+
+#storyText{
+  width: 60%;
+  height: 120px;
+  font-family: "ABCStefan", Arial, sans-serif;
+  padding: 10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- ========= LOADING ========= -->
+<div id="loadingPage">
+  <div class="loading-content">
+    <img src="./images/logo.png" class="loading-logo">
+    <div class="loading-title">CORNER </div>
+    <div class="loading-bar-wrap">
+      <div class="loading-bar"></div>
+    </div>
+    <div class="loading-text">
+      Upload a corner that belongs to you, 
+      and share the story behind it.
+    </div>
+  </div>
+</div>
+
+<!-- ========= EDITOR PAGE ========= -->
+<div id="editorPage">
+
+<h2 class="title">CORNER EDIT</h2>
+
+<div class="upload-wrap">
+  <input type="file" id="upload">
+  <!-- ✳️ 新增：重新选择按钮 -->
+  <button id="clearBtn" onclick="clearUpload()">✕</button>
+</div>
+
+<div class="controls">
+
+  <label class="geo">
+    <input type="checkbox" id="geoToggle">
+    Show my location
+  </label>
+
+  <div id="location">Location disabled</div>
+
+  <label class="bg-label">
+    Background Color
+    <input type="color" id="bgColor" value="#d9d9d9">
+  </label>
+
+</div>
+
+<div class="top">
+  <button onclick="applyMask()">Done</button>
+  <button onclick="resetImage()">Reset</button>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<div class="toolbar">
+  <button onclick="setShape('rect')" id="b-rect" class="active">■</button>
+  <button onclick="setShape('circle')" id="b-circle">●</button>
+  <button onclick="setShape('triangle')" id="b-triangle">▲</button>
+  <button onclick="setShape('star')" id="b-star">★</button>
+</div>
+
+</div>
+
+<!-- ========= STORY PAGE ========= -->
+<div id="storyPage">
+
+  <div id="storyTitle">Story</div>
+
+  <img id="storyImg">
+
+  <br>
+
+  <textarea id="storyText" placeholder="Write your story..."></textarea>
+
+  <br><br>
+
+  <button onclick="goBack()">Back</button>
+  <button onclick="publish()">Publish</button>
+
+</div>
+
+<script>
+
+/* ========= ENTER ========= */
+const loadingPage = document.getElementById("loadingPage");
+
+loadingPage.addEventListener("click", ()=>{
+  loadingPage.style.opacity = "0";
+  setTimeout(()=>{
+    loadingPage.style.display = "none";
+  },800);
+});
+
+/* ========= CANVAS ========= */
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
+
+let img = new Image();
+let original = null;
+
+let startX, startY, endX, endY;
+let isDrawing = false;
+
+let currentShape = "rect";
+let selections = [];
+
+let bgColor = "#d9d9d9";
+
+let userLocation = { lat: null, lng: null };
+
+/* ========= CLEAR UPLOAD ✳️ 新增 ========= */
+function clearUpload(){
+  document.getElementById("upload").value = "";
+
+  img = new Image();
+  original = null;
+  selections = [];
+
+  canvas.width = 0;
+  canvas.height = 0;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+/* ========= GEO ========= */
+document.getElementById("geoToggle").addEventListener("change", function(e){
+  if(e.target.checked){
+    getLocation();
+  } else {
+    userLocation.lat = null;
+    userLocation.lng = null;
+    document.getElementById("location").innerText = "Location disabled";
+  }
+});
+
+function getLocation(){
+  navigator.geolocation.getCurrentPosition(
+    (pos)=>{
+      userLocation.lat = pos.coords.latitude;
+      userLocation.lng = pos.coords.longitude;
+      document.getElementById("location").innerText =
+        `${userLocation.lat.toFixed(5)}, ${userLocation.lng.toFixed(5)}`;
+    }
+  );
+}
+
+/* ========= BG ========= */
+document.getElementById("bgColor").addEventListener("input", e=>{
+  bgColor = e.target.value;
+  draw();
+});
+
+/* ========= SHAPE ========= */
+function setShape(s){
+  currentShape = s;
+  document.querySelectorAll(".toolbar button")
+    .forEach(b=>b.classList.remove("active"));
+  document.getElementById("b-"+s).classList.add("active");
+}
+
+/* ========= UPLOAD ========= */
+document.getElementById("upload").addEventListener("change",e=>{
+  const file = e.target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function(ev){
+    img.onload = function(){
+      canvas.width = img.width;
+      canvas.height = img.height;
+      original = ev.target.result;
+      selections = [];
+      draw();
+    }
+    img.src = ev.target.result;
+  }
+
+  reader.readAsDataURL(file);
+});
+
+/* ========= DRAW ========= */
+function draw(){
+  if(!img.src) return;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(img,0,0);
+
+  selections.forEach(s=>{
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = 2;
+    drawShape(ctx,s);
+    ctx.stroke();
+  });
+}
+
+/* ========= MOUSE ========= */
+canvas.addEventListener("mousedown",e=>{
+  startX = e.offsetX;
+  startY = e.offsetY;
+  isDrawing = true;
+});
+
+canvas.addEventListener("mousemove",e=>{
+  if(!isDrawing) return;
+
+  endX = e.offsetX;
+  endY = e.offsetY;
+
+  draw();
+
+  ctx.strokeStyle = "black";
+  drawShape(ctx,{
+    x:startX,
+    y:startY,
+    w:endX-startX,
+    h:endY-startY,
+    shape:currentShape
+  });
+
+  ctx.stroke();
+});
+
+canvas.addEventListener("mouseup",e=>{
+  isDrawing = false;
+
+  endX = e.offsetX;
+  endY = e.offsetY;
+
+  selections.push({
+    x:startX,
+    y:startY,
+    w:endX-startX,
+    h:endY-startY,
+    shape:currentShape,
+    color:`hsl(${Math.random()*360},70%,50%)`
+  });
+
+  draw();
+});
+
+/* ========= SHAPE ========= */
+function drawShape(c,s){
+  let {x,y,w,h,shape} = s;
+  c.beginPath();
+
+  if(shape==="rect") c.rect(x,y,w,h);
+
+  if(shape==="circle"){
+    c.ellipse(x+w/2,y+h/2,Math.abs(w/2),Math.abs(h/2),0,0,Math.PI*2);
+  }
+
+  if(shape==="triangle"){
+    c.moveTo(x+w/2,y);
+    c.lineTo(x,y+h);
+    c.lineTo(x+w,y+h);
+    c.closePath();
+  }
+
+  if(shape==="star"){
+    let cx=x+w/2, cy=y+h/2;
+    let spikes=5;
+    let outer=Math.abs(w/2);
+    let inner=outer/2;
+    let rot=Math.PI/2*3;
+    let step=Math.PI/spikes;
+
+    c.moveTo(cx,cy-outer);
+
+    for(let i=0;i<spikes;i++){
+      c.lineTo(cx+Math.cos(rot)*outer,cy+Math.sin(rot)*outer);
+      rot+=step;
+      c.lineTo(cx+Math.cos(rot)*inner,cy+Math.sin(rot)*inner);
+      rot+=step;
+    }
+
+    c.closePath();
+  }
+}
+
+/* ========= MASK + STORY ========= */
+function applyMask(){
+
+  if(selections.length === 0) return;
+
+  let mask = document.createElement("canvas");
+  mask.width = canvas.width;
+  mask.height = canvas.height;
+
+  let mctx = mask.getContext("2d");
+  mctx.fillStyle = "white";
+
+  selections.forEach(s=>{
+    drawShape(mctx,s);
+    mctx.fill();
+  });
+
+  let result = document.createElement("canvas");
+  result.width = canvas.width;
+  result.height = canvas.height;
+
+  let rctx = result.getContext("2d");
+
+  rctx.fillStyle = bgColor;
+  rctx.fillRect(0,0,result.width,result.height);
+  rctx.drawImage(img,0,0);
+
+  rctx.globalCompositeOperation = "destination-in";
+  rctx.drawImage(mask,0,0);
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(result,0,0);
+
+  img.src = canvas.toDataURL();
+
+  document.getElementById("storyImg").src = canvas.toDataURL();
+  document.getElementById("editorPage").style.display = "none";
+  document.getElementById("storyPage").style.display = "block";
+
+  selections = [];
+}
+
+/* ========= BACK ========= */
+function goBack(){
+  document.getElementById("storyPage").style.display = "none";
+  document.getElementById("editorPage").style.display = "block";
+}
+
+/* ========= RESET ========= */
+function resetImage(){
+  if(!original) return;
+
+  let r = new Image();
+
+  r.onload = function(){
+    canvas.width = r.width;
+    canvas.height = r.height;
+    img = r;
+    selections = [];
+    draw();
+  }
+
+  r.src = original;
+}
+
+/* ========= PUBLISH ========= */
+function publish(){
+
+  let card = document.createElement("canvas");
+  card.width = 800;
+  card.height = 1000;
+
+  let c = card.getContext("2d");
+
+  c.fillStyle = "#fff";
+  c.fillRect(0,0,card.width,card.height);
+
+  let imgEl = document.getElementById("storyImg");
+
+  c.drawImage(imgEl, 50, 80, 700, 700);
+
+  c.fillStyle = "#000";
+  c.font = "20px Arial";
+  let text = document.getElementById("storyText").value;
+
+  c.fillText("MY STORY:", 50, 830);
+
+  let lines = text.match(/.{1,40}/g) || [];
+  lines.forEach((l,i)=>{
+    c.fillText(l, 50, 870 + i*30);
+  });
+
+  let a = document.createElement("a");
+  a.download = "story-card.png";
+  a.href = card.toDataURL();
+  a.click();
+}
+
+</script>
+
+</body>
+</html>
