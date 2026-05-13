@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Shape Selection System</title>
+<title>CORNER</title>
 
 <style>
 
 /* ========= FONT ========= */
 @font-face {
   font-family: "ABCStefan";
-  src: url("./fonts/ABCStefan-Simple-Trial.otf") format("opentype");
+  src: url("ABCStefan-Simple-Trial.otf") format("opentype");
   font-display: swap;
 }
 
@@ -112,7 +112,6 @@ input[type="file"] {
   cursor: pointer;
 }
 
-/* ✳️ 新增：关闭按钮 */
 #clearBtn{
   font-family: "ABCStefan", Arial, sans-serif;
   border: 1px solid #000;
@@ -121,6 +120,7 @@ input[type="file"] {
   cursor: pointer;
 }
 
+/* ========= LOCATION ========= */
 #location {
   font-family: "ABCStefan", Arial, sans-serif;
   font-size: 15px;
@@ -128,6 +128,7 @@ input[type="file"] {
   color: #333;
 }
 
+/* ========= BUTTON ========= */
 button {
   font-family: "ABCStefan", Arial, sans-serif;
   padding: 10px 14px;
@@ -142,6 +143,7 @@ button.active {
   color: #fff;
 }
 
+/* ========= CANVAS ========= */
 canvas {
   border: 1px solid #323232;
   margin-top: 20px;
@@ -149,6 +151,7 @@ canvas {
   max-width: 90%;
 }
 
+/* ========= TOOLBAR ========= */
 .toolbar {
   position: fixed;
   bottom: 20px;
@@ -156,10 +159,12 @@ canvas {
   transform: translateX(-50%);
 }
 
+/* ========= CONTROLS ========= */
 .controls {
   margin-top: 10px;
 }
 
+/* ========= LABELS ========= */
 .geo, .bg-label {
   font-family: "ABCStefan", Arial, sans-serif;
   font-size: 14px;
@@ -167,6 +172,7 @@ canvas {
   display: inline-block;
 }
 
+/* ========= TOP BUTTON ========= */
 .top {
   position: fixed;
   bottom: 80px;
@@ -202,6 +208,35 @@ canvas {
   padding: 10px;
 }
 
+/* ========= SHARE CARD ========= */
+#shareCard{
+  display:none;
+  width: 360px;
+  margin: 40px auto;
+  background:#fff;
+  border:1px solid #000;
+  padding:20px;
+}
+
+#shareCard img{
+  width:100%;
+  margin-bottom:15px;
+}
+
+#shareCardTitle{
+  font-family:"ABCStefan", Arial, sans-serif;
+  font-size:24px;
+  margin-bottom:10px;
+}
+
+#shareCardText{
+  font-family:"ABCStefan", Arial, sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  text-align:left;
+  white-space:pre-wrap;
+}
+
 </style>
 </head>
 
@@ -210,15 +245,20 @@ canvas {
 <!-- ========= LOADING ========= -->
 <div id="loadingPage">
   <div class="loading-content">
-    <img src="./images/logo.png" class="loading-logo">
-    <div class="loading-title">CORNER </div>
+
+    <img src="logo.png" class="loading-logo">
+
+    <div class="loading-title">CORNER</div>
+
     <div class="loading-bar-wrap">
       <div class="loading-bar"></div>
     </div>
+
     <div class="loading-text">
-      Upload a corner that belongs to you, 
+      Upload a corner that belongs to you,<br>
       and share the story behind it.
     </div>
+
   </div>
 </div>
 
@@ -228,9 +268,11 @@ canvas {
 <h2 class="title">CORNER EDIT</h2>
 
 <div class="upload-wrap">
+
   <input type="file" id="upload">
-  <!-- ✳️ 新增：重新选择按钮 -->
+
   <button id="clearBtn" onclick="clearUpload()">✕</button>
+
 </div>
 
 <div class="controls">
@@ -279,17 +321,30 @@ canvas {
   <br><br>
 
   <button onclick="goBack()">Back</button>
+
   <button onclick="publish()">Publish</button>
+
+  <!-- ========= SHARE CARD ========= -->
+  <div id="shareCard">
+
+    <div id="shareCardTitle">MY CORNER</div>
+
+    <img id="cardImage">
+
+    <div id="shareCardText"></div>
+
+  </div>
 
 </div>
 
 <script>
 
-/* ========= ENTER ========= */
+/* ========= LOADING ========= */
 const loadingPage = document.getElementById("loadingPage");
 
 loadingPage.addEventListener("click", ()=>{
   loadingPage.style.opacity = "0";
+
   setTimeout(()=>{
     loadingPage.style.display = "none";
   },800);
@@ -303,21 +358,29 @@ let img = new Image();
 let original = null;
 
 let startX, startY, endX, endY;
+
 let isDrawing = false;
 
 let currentShape = "rect";
+
 let selections = [];
 
 let bgColor = "#d9d9d9";
 
-let userLocation = { lat: null, lng: null };
+let userLocation = {
+  lat: null,
+  lng: null
+};
 
-/* ========= CLEAR UPLOAD ✳️ 新增 ========= */
+/* ========= CLEAR ========= */
 function clearUpload(){
+
   document.getElementById("upload").value = "";
 
   img = new Image();
+
   original = null;
+
   selections = [];
 
   canvas.width = 0;
@@ -328,20 +391,30 @@ function clearUpload(){
 
 /* ========= GEO ========= */
 document.getElementById("geoToggle").addEventListener("change", function(e){
+
   if(e.target.checked){
+
     getLocation();
-  } else {
+
+  }else{
+
     userLocation.lat = null;
     userLocation.lng = null;
-    document.getElementById("location").innerText = "Location disabled";
+
+    document.getElementById("location").innerText =
+      "Location disabled";
   }
 });
 
 function getLocation(){
+
   navigator.geolocation.getCurrentPosition(
+
     (pos)=>{
+
       userLocation.lat = pos.coords.latitude;
       userLocation.lng = pos.coords.longitude;
+
       document.getElementById("location").innerText =
         `${userLocation.lat.toFixed(5)}, ${userLocation.lng.toFixed(5)}`;
     }
@@ -350,31 +423,45 @@ function getLocation(){
 
 /* ========= BG ========= */
 document.getElementById("bgColor").addEventListener("input", e=>{
+
   bgColor = e.target.value;
+
   draw();
 });
 
 /* ========= SHAPE ========= */
 function setShape(s){
+
   currentShape = s;
+
   document.querySelectorAll(".toolbar button")
     .forEach(b=>b.classList.remove("active"));
-  document.getElementById("b-"+s).classList.add("active");
+
+  document.getElementById("b-"+s)
+    .classList.add("active");
 }
 
 /* ========= UPLOAD ========= */
 document.getElementById("upload").addEventListener("change",e=>{
+
   const file = e.target.files[0];
+
   const reader = new FileReader();
 
   reader.onload = function(ev){
+
     img.onload = function(){
+
       canvas.width = img.width;
       canvas.height = img.height;
+
       original = ev.target.result;
+
       selections = [];
+
       draw();
     }
+
     img.src = ev.target.result;
   }
 
@@ -383,29 +470,40 @@ document.getElementById("upload").addEventListener("change",e=>{
 
 /* ========= DRAW ========= */
 function draw(){
+
   if(!img.src) return;
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
+
   ctx.fillStyle = bgColor;
+
   ctx.fillRect(0,0,canvas.width,canvas.height);
+
   ctx.drawImage(img,0,0);
 
   selections.forEach(s=>{
+
     ctx.strokeStyle = s.color;
+
     ctx.lineWidth = 2;
+
     drawShape(ctx,s);
+
     ctx.stroke();
   });
 }
 
 /* ========= MOUSE ========= */
 canvas.addEventListener("mousedown",e=>{
+
   startX = e.offsetX;
   startY = e.offsetY;
+
   isDrawing = true;
 });
 
 canvas.addEventListener("mousemove",e=>{
+
   if(!isDrawing) return;
 
   endX = e.offsetX;
@@ -414,6 +512,7 @@ canvas.addEventListener("mousemove",e=>{
   draw();
 
   ctx.strokeStyle = "black";
+
   drawShape(ctx,{
     x:startX,
     y:startY,
@@ -426,6 +525,7 @@ canvas.addEventListener("mousemove",e=>{
 });
 
 canvas.addEventListener("mouseup",e=>{
+
   isDrawing = false;
 
   endX = e.offsetX;
@@ -445,36 +545,69 @@ canvas.addEventListener("mouseup",e=>{
 
 /* ========= SHAPE ========= */
 function drawShape(c,s){
+
   let {x,y,w,h,shape} = s;
+
   c.beginPath();
 
-  if(shape==="rect") c.rect(x,y,w,h);
+  if(shape==="rect"){
+
+    c.rect(x,y,w,h);
+  }
 
   if(shape==="circle"){
-    c.ellipse(x+w/2,y+h/2,Math.abs(w/2),Math.abs(h/2),0,0,Math.PI*2);
+
+    c.ellipse(
+      x+w/2,
+      y+h/2,
+      Math.abs(w/2),
+      Math.abs(h/2),
+      0,
+      0,
+      Math.PI*2
+    );
   }
 
   if(shape==="triangle"){
+
     c.moveTo(x+w/2,y);
     c.lineTo(x,y+h);
     c.lineTo(x+w,y+h);
+
     c.closePath();
   }
 
   if(shape==="star"){
-    let cx=x+w/2, cy=y+h/2;
+
+    let cx=x+w/2;
+    let cy=y+h/2;
+
     let spikes=5;
+
     let outer=Math.abs(w/2);
+
     let inner=outer/2;
+
     let rot=Math.PI/2*3;
+
     let step=Math.PI/spikes;
 
     c.moveTo(cx,cy-outer);
 
     for(let i=0;i<spikes;i++){
-      c.lineTo(cx+Math.cos(rot)*outer,cy+Math.sin(rot)*outer);
+
+      c.lineTo(
+        cx+Math.cos(rot)*outer,
+        cy+Math.sin(rot)*outer
+      );
+
       rot+=step;
-      c.lineTo(cx+Math.cos(rot)*inner,cy+Math.sin(rot)*inner);
+
+      c.lineTo(
+        cx+Math.cos(rot)*inner,
+        cy+Math.sin(rot)*inner
+      );
+
       rot+=step;
     }
 
@@ -482,67 +615,92 @@ function drawShape(c,s){
   }
 }
 
-/* ========= MASK + STORY ========= */
+/* ========= APPLY ========= */
 function applyMask(){
 
-  if(selections.length === 0) return;
+  if(selections.length===0) return;
 
-  let mask = document.createElement("canvas");
-  mask.width = canvas.width;
-  mask.height = canvas.height;
+  let mask=document.createElement("canvas");
 
-  let mctx = mask.getContext("2d");
-  mctx.fillStyle = "white";
+  mask.width=canvas.width;
+  mask.height=canvas.height;
+
+  let mctx=mask.getContext("2d");
+
+  mctx.fillStyle="white";
 
   selections.forEach(s=>{
+
     drawShape(mctx,s);
+
     mctx.fill();
   });
 
-  let result = document.createElement("canvas");
-  result.width = canvas.width;
-  result.height = canvas.height;
+  let result=document.createElement("canvas");
 
-  let rctx = result.getContext("2d");
+  result.width=canvas.width;
+  result.height=canvas.height;
 
-  rctx.fillStyle = bgColor;
+  let rctx=result.getContext("2d");
+
+  rctx.fillStyle=bgColor;
+
   rctx.fillRect(0,0,result.width,result.height);
+
   rctx.drawImage(img,0,0);
 
-  rctx.globalCompositeOperation = "destination-in";
+  rctx.globalCompositeOperation="destination-in";
+
   rctx.drawImage(mask,0,0);
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = bgColor;
+
+  ctx.fillStyle=bgColor;
+
   ctx.fillRect(0,0,canvas.width,canvas.height);
+
   ctx.drawImage(result,0,0);
 
-  img.src = canvas.toDataURL();
+  img.src=canvas.toDataURL();
 
-  document.getElementById("storyImg").src = canvas.toDataURL();
-  document.getElementById("editorPage").style.display = "none";
-  document.getElementById("storyPage").style.display = "block";
+  document.getElementById("storyImg").src =
+    canvas.toDataURL();
 
-  selections = [];
+  document.getElementById("editorPage").style.display =
+    "none";
+
+  document.getElementById("storyPage").style.display =
+    "block";
+
+  selections=[];
 }
 
 /* ========= BACK ========= */
 function goBack(){
-  document.getElementById("storyPage").style.display = "none";
-  document.getElementById("editorPage").style.display = "block";
+
+  document.getElementById("storyPage").style.display =
+    "none";
+
+  document.getElementById("editorPage").style.display =
+    "block";
 }
 
 /* ========= RESET ========= */
 function resetImage(){
+
   if(!original) return;
 
   let r = new Image();
 
   r.onload = function(){
+
     canvas.width = r.width;
     canvas.height = r.height;
+
     img = r;
+
     selections = [];
+
     draw();
   }
 
@@ -552,34 +710,19 @@ function resetImage(){
 /* ========= PUBLISH ========= */
 function publish(){
 
-  let card = document.createElement("canvas");
-  card.width = 800;
-  card.height = 1000;
+  let text =
+    document.getElementById("storyText").value;
 
-  let c = card.getContext("2d");
+  let image =
+    document.getElementById("storyImg").src;
 
-  c.fillStyle = "#fff";
-  c.fillRect(0,0,card.width,card.height);
+  document.getElementById("cardImage").src = image;
 
-  let imgEl = document.getElementById("storyImg");
+  document.getElementById("shareCardText").innerText =
+    text;
 
-  c.drawImage(imgEl, 50, 80, 700, 700);
-
-  c.fillStyle = "#000";
-  c.font = "20px Arial";
-  let text = document.getElementById("storyText").value;
-
-  c.fillText("MY STORY:", 50, 830);
-
-  let lines = text.match(/.{1,40}/g) || [];
-  lines.forEach((l,i)=>{
-    c.fillText(l, 50, 870 + i*30);
-  });
-
-  let a = document.createElement("a");
-  a.download = "story-card.png";
-  a.href = card.toDataURL();
-  a.click();
+  document.getElementById("shareCard").style.display =
+    "block";
 }
 
 </script>
